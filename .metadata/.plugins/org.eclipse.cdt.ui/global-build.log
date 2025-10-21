@@ -33,3 +33,10 @@ Finished building: default.size.stdout
  
 Finished building: MPP_lab.list
  
+19:57:49 **** Incremental Build of configuration Debug for project MPP_lab ****
+make -j16 all 
+arm-none-eabi-size  MPP_lab.elf 
+   text	   data	    bss	    dec	    hex	filename
+  13308	     20	   1852	  15180	   3b4c	MPP_lab.elf
+Finished building: default.size.stdout
+ 

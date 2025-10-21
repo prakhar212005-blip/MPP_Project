@@ -473,28 +473,15 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
     trafficTimer++;  // seconds
 
     if (emergencyActive) {
+        // Emergency green in progress
         if (trafficTimer >= 10) {
             trafficTimer = 0;
-            emergencyActive = false;
-
-            // Only go back to previous state if it's different
-            if (trafficState != prevState) {
-                trafficState = prevState; // resume normal
-            } else {
-                // advance to the next normal state
-                switch (trafficState) {
-                    case SOUTH_GREEN: trafficState = WEST_GREEN; break;
-                    case WEST_GREEN: trafficState = NORTH_GREEN; break;
-                    case NORTH_GREEN: trafficState = EAST_GREEN; break;
-                    case EAST_GREEN: trafficState = SOUTH_GREEN; break;
-                }
-            }
-
+            emergencyActive = false;       // Finished emergency
+            trafficState = prevState;      // Resume normal state
             SetTrafficState(trafficState);
         }
         return;
     }
-
 
     // Check for new emergency
     if (emergencySouth) {

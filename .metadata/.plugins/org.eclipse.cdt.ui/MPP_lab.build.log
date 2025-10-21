@@ -1,10 +1,10 @@
-19:57:49 **** Incremental Build of configuration Debug for project MPP_lab ****
+21:38:54 **** Incremental Build of configuration Debug for project MPP_lab ****
 make -j16 all 
 arm-none-eabi-size  MPP_lab.elf 
    text	   data	    bss	    dec	    hex	filename
-  13308	     20	   1852	  15180	   3b4c	MPP_lab.elf
+  13504	     20	   1852	  15376	   3c10	MPP_lab.elf
 Finished building: default.size.stdout
  
 
-19:57:49 Build Finished. 0 errors, 0 warnings. (took 250ms)
+21:38:55 Build Finished. 0 errors, 0 warnings. (took 450ms)
 

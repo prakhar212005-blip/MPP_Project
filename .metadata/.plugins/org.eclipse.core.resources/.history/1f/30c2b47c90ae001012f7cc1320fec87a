@@ -98,12 +98,8 @@ typedef enum {
     EAST_GREEN
 } TrafficState;
 
-
-bool emergencySouth = false;
-bool emergencyWest = false;
-bool emergencyActive = false;  // Indicates currently giving priority
-TrafficState prevState;
 TrafficState trafficState = SOUTH_GREEN;
+TrafficState prevState;
 uint16_t trafficTimer = 0;  // counts seconds within one state
 
 void SetAllRed() {
@@ -143,15 +139,18 @@ void SetTrafficState(TrafficState state) {
 
 
 void set_status(Reader readby){
-		prevState = trafficState;
 	if(readby == reader1){
 		trafficTimer = 0;
+		prevState = trafficState;
 		emergencychange = true;
+		trafficState = SOUTH_GREEN;
 		SetTrafficState(SOUTH_GREEN);
 	}
 	else if(readby == reader2){
 		trafficTimer = 0;
+		prevState = trafficState;
 		emergencychange = true;
+		trafficState = WEST_GREEN;
 		SetTrafficState(WEST_GREEN);
 	}
 }
@@ -209,25 +208,19 @@ int main(void)
 //	  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, 0);
 //			  HAL_Delay(100);
 
-	  // South RFID
-	  // South RFID
-	  if (!emergencyActive && MFRC522_Request_1(PICC_REQIDL_1, str) == MI_OK)
-	  {
-	      status = MFRC522_Anticoll_1(str);
-	      memcpy(sNum, str, 5);
-	      emergencySouth = true;   // Emergency detected on South
-	      HAL_Delay(100);
+	  if(MFRC522_Request_1(PICC_REQIDL_1, str)== MI_OK){
+	  	  	    status = MFRC522_Anticoll_1(str);
+	  	  	  memcpy(sNum, str, 5);
+	  	  	  set_status(reader1);
+	  	  	   HAL_Delay(100);
 	  }
 
-	  // West RFID
-	  if (!emergencyActive && MFRC522_Request(PICC_REQIDL, str) == MI_OK)
-	  {
-	      status = MFRC522_Anticoll(str);
-	      memcpy(sNum, str, 5);
-	      emergencyWest = true;    // Emergency detected on West
-	      HAL_Delay(100);
+	  if(MFRC522_Request(PICC_REQIDL, str)==MI_OK){
+	 	  		  status = MFRC522_Anticoll(str);
+	 	  		memcpy(sNum, str, 5);
+	 	  		set_status(reader2);
+	 	  	   HAL_Delay(100);
 	  }
-
 
     /* USER CODE END WHILE */
 
@@ -468,92 +461,58 @@ static void MX_GPIO_Init(void)
 /* USER CODE BEGIN 4 */
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
-    if (htim->Instance != TIM2) return;
-
-    trafficTimer++;  // seconds
-
-    if (emergencyActive) {
-        if (trafficTimer >= 10) {
-            trafficTimer = 0;
-            emergencyActive = false;
-
-            // Only go back to previous state if it's different
-            if (trafficState != prevState) {
-                trafficState = prevState; // resume normal
-            } else {
-                // advance to the next normal state
-                switch (trafficState) {
-                    case SOUTH_GREEN: trafficState = WEST_GREEN; break;
-                    case WEST_GREEN: trafficState = NORTH_GREEN; break;
-                    case NORTH_GREEN: trafficState = EAST_GREEN; break;
-                    case EAST_GREEN: trafficState = SOUTH_GREEN; break;
-                }
-            }
-
-            SetTrafficState(trafficState);
-        }
-        return;
-    }
-
-
-    // Check for new emergency
-    if (emergencySouth) {
-        prevState = trafficState;
-        trafficState = SOUTH_GREEN;
-        emergencySouth = false;
-        emergencyActive = true;
-        trafficTimer = 0;
-        SetTrafficState(trafficState);
-        return;
-    }
-    if (emergencyWest) {
-        prevState = trafficState;
-        trafficState = WEST_GREEN;
-        emergencyWest = false;
-        emergencyActive = true;
-        trafficTimer = 0;
-        SetTrafficState(trafficState);
-        return;
-    }
-
-    // Normal state machine
-    switch (trafficState)
+    if (htim->Instance == TIM2)
     {
-        case SOUTH_GREEN:
-            if (trafficTimer >= 10) {
-                trafficTimer = 0;
-                prevState = trafficState;
-                trafficState = WEST_GREEN;
-                SetTrafficState(trafficState);
-            }
-            break;
-        case WEST_GREEN:
-            if (trafficTimer >= 10) {
-                trafficTimer = 0;
-                prevState = trafficState;
-                trafficState = NORTH_GREEN;
-                SetTrafficState(trafficState);
-            }
-            break;
-        case NORTH_GREEN:
-            if (trafficTimer >= 10) {
-                trafficTimer = 0;
-                prevState = trafficState;
-                trafficState = EAST_GREEN;
-                SetTrafficState(trafficState);
-            }
-            break;
-        case EAST_GREEN:
-            if (trafficTimer >= 10) {
-                trafficTimer = 0;
-                prevState = trafficState;
-                trafficState = SOUTH_GREEN;
-                SetTrafficState(trafficState);
-            }
-            break;
+        trafficTimer++;  // counts seconds in current state
+
+        switch (trafficState)
+        {
+            case SOUTH_GREEN:
+                if (trafficTimer >= 10) {
+                    trafficTimer = 0;
+                    if(emergencychange){
+                    	trafficState = prevState;
+                    	emergencychange = false;
+                    }
+                    else{
+                    trafficState = WEST_GREEN;
+                    }
+                    SetTrafficState(WEST_GREEN);
+                }
+                break;
+
+            case WEST_GREEN:
+                if (trafficTimer >= 10) {
+                    trafficTimer = 0;
+                    if(emergencychange){
+                    	trafficState = prevState;
+                    	emergencychange = false;
+                    }
+                    else{
+                    trafficState = NORTH_GREEN;
+                    }
+                    SetTrafficState(NORTH_GREEN);
+                }
+                break;
+
+            case NORTH_GREEN:
+                if (trafficTimer >= 10) {
+                    trafficTimer = 0;
+                    trafficState = EAST_GREEN;
+                    SetTrafficState(EAST_GREEN);
+                }
+                break;
+
+            case EAST_GREEN:
+                if (trafficTimer >= 10) {
+                    trafficTimer = 0;
+                    trafficState = SOUTH_GREEN;
+                    SetTrafficState(SOUTH_GREEN);
+                }
+                break;
+        }
     }
 }
-
 
 /* USER CODE END 4 */
 

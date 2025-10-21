@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<section name="Workbench">
+	<section name="org.eclipse.ui.texteditor.FindReplaceDialog">
+		<item key="selection" value="MFRC522"/>
+		<item key="wrap" value="true"/>
+		<item key="casesensitive" value="false"/>
+		<item key="wholeword" value="false"/>
+		<item key="incremental" value="false"/>
+		<item key="isRegEx" value="false"/>
+		<list key="findhistory">
+			<item value="MFRC522"/>
+			<item value="ANTENNA"/>
+			<item value="Write_MFRC522"/>
+			<item value="MFRC522_Anticoll_1"/>
+			<item value="MFRC522_Request_1"/>
+			<item value="MFRC522_Init"/>
+			<item value="MFRC522_Init_1"/>
+			<item value="MFRC522_RST_PIN"/>
+			<item value="MFRC522_RST_PORT"/>
+			<item value="MFRC522_CS_PIN"/>
+			<item value="MFRC522_CS_PORT"/>
+			<item value="HSPI_INSTANCE"/>
+			<item value="MFRC522_Request"/>
+			<item value="MFRC522_Anticoll"/>
+			<item value="request"/>
+		</list>
+		<list key="replacehistory">
+			<item value="MFRC522_Anticoll_2"/>
+			<item value="MFRC522_Request_2"/>
+			<item value="MFRC522_Init_2"/>
+			<item value="MFRC522_RST_PIN_2"/>
+			<item value="MFRC522_RST_PORT_2"/>
+			<item value="MFRC522_CS_PIN_2"/>
+			<item value="MFRC522_CS_PORT_2"/>
+			<item value="HSPI_INSTANCE_2"/>
+			<item value="MFRC522_Init"/>
+			<item value="MFRC522_Init_1"/>
+			<item value="MFRC522_RST_PIN_1"/>
+			<item value="MFRC522_RST_PORT_1"/>
+			<item value="MFRC522_CS_PIN_1"/>
+			<item value="MFRC522_CS_PORT_1"/>
+			<item value="HSPI_INSTANCE_1"/>
+		</list>
+	</section>
+	<section name="org.eclipse.ui.texteditor.FindReplaceDialog_dialogBounds">
+		<item key="DIALOG_X_ORIGIN" value="927"/>
+		<item key="DIALOG_Y_ORIGIN" value="223"/>
+		<item key="DIALOG_WIDTH" value="414"/>
+		<item key="DIALOG_HEIGHT" value="454"/>
+		<item key="DIALOG_FONT_NAME" value="1|Segoe UI|9.0|0|WINDOWS|1|-15|0|0|0|400|0|0|0|1|0|0|0|0|Segoe UI"/>
+	</section>
+</section>

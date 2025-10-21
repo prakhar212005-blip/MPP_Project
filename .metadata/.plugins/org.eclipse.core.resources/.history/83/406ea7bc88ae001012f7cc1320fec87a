@@ -200,13 +200,13 @@ int main(void)
 	  	  	    status = MFRC522_Anticoll_1(str);
 	  	  	  memcpy(sNum, str, 5);
 	  	  	  set_status();
-	  	  	   HAL_Delay(100);
+	  	  	   // HAL_Delay(100);
 
 	  status = MFRC522_Request(PICC_REQIDL, str);
 	 	  		  status = MFRC522_Anticoll(str);
 	 	  		memcpy(sNum, str, 5);
 	 	  		set_status();
-	 	  	   HAL_Delay(100);
+	 	  		  	  //  HAL_Delay(100);
 	 	  		if(chainless){
 	 	  		 HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13,1);
 	 	  		}

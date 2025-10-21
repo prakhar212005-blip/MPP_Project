@@ -56,16 +56,6 @@ uint8_t cardNumber = 2;
 bool chainless = false;
 bool chained = false;
 
-#define SOUTH_GREEN_PIN   GPIO_PIN_3
-#define SOUTH_RED_PIN     GPIO_PIN_4
-#define WEST_GREEN_PIN    GPIO_PIN_5
-#define WEST_RED_PIN      GPIO_PIN_6
-#define NORTH_GREEN_PIN   GPIO_PIN_7
-#define NORTH_RED_PIN     GPIO_PIN_8
-#define EAST_GREEN_PIN    GPIO_PIN_9
-#define EAST_RED_PIN      GPIO_PIN_13
-#define TRAFFIC_PORT      GPIOB
-
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -80,53 +70,15 @@ static void MX_SPI2_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-uint16_t timerCounter = 0;
-
 typedef enum {
-    SOUTH_GREEN,
-    WEST_GREEN,
-    NORTH_GREEN,
-    EAST_GREEN
-} TrafficState;
+    STATE_GREEN,
+    STATE_RED,
+    STATE_RFID_GREEN
+} LightState;
 
-TrafficState trafficState = SOUTH_GREEN;
-uint16_t trafficTimer = 0;  // counts seconds within one state
-
-void SetAllRed() {
-    HAL_GPIO_WritePin(TRAFFIC_PORT, SOUTH_RED_PIN, GPIO_PIN_SET);
-    HAL_GPIO_WritePin(TRAFFIC_PORT, WEST_RED_PIN, GPIO_PIN_SET);
-    HAL_GPIO_WritePin(TRAFFIC_PORT, NORTH_RED_PIN, GPIO_PIN_SET);
-    HAL_GPIO_WritePin(TRAFFIC_PORT, EAST_RED_PIN, GPIO_PIN_SET);
-
-    HAL_GPIO_WritePin(TRAFFIC_PORT, SOUTH_GREEN_PIN, GPIO_PIN_RESET);
-    HAL_GPIO_WritePin(TRAFFIC_PORT, WEST_GREEN_PIN, GPIO_PIN_RESET);
-    HAL_GPIO_WritePin(TRAFFIC_PORT, NORTH_GREEN_PIN, GPIO_PIN_RESET);
-    HAL_GPIO_WritePin(TRAFFIC_PORT, EAST_GREEN_PIN, GPIO_PIN_RESET);
-}
-
-void SetTrafficState(TrafficState state) {
-    SetAllRed();  // first turn everything red
-
-    switch (state) {
-        case SOUTH_GREEN:
-            HAL_GPIO_WritePin(TRAFFIC_PORT, SOUTH_RED_PIN, GPIO_PIN_RESET);
-            HAL_GPIO_WritePin(TRAFFIC_PORT, SOUTH_GREEN_PIN, GPIO_PIN_SET);
-            break;
-        case WEST_GREEN:
-            HAL_GPIO_WritePin(TRAFFIC_PORT, WEST_RED_PIN, GPIO_PIN_RESET);
-            HAL_GPIO_WritePin(TRAFFIC_PORT, WEST_GREEN_PIN, GPIO_PIN_SET);
-            break;
-        case NORTH_GREEN:
-            HAL_GPIO_WritePin(TRAFFIC_PORT, NORTH_RED_PIN, GPIO_PIN_RESET);
-            HAL_GPIO_WritePin(TRAFFIC_PORT, NORTH_GREEN_PIN, GPIO_PIN_SET);
-            break;
-        case EAST_GREEN:
-            HAL_GPIO_WritePin(TRAFFIC_PORT, EAST_RED_PIN, GPIO_PIN_RESET);
-            HAL_GPIO_WritePin(TRAFFIC_PORT, EAST_GREEN_PIN, GPIO_PIN_SET);
-            break;
-    }
-}
-
+LightState currentState = STATE_GREEN;
+uint16_t timerCounter = 0;  // counts seconds
+uint16_t currtime = 0;
 
 void set_status(){
 	 if ((str[2] == 174 && str[3] == 2 && str[4] == 39))
@@ -180,8 +132,6 @@ int main(void)
   HAL_TIM_Base_Start_IT(&htim2);
   MFRC522_Init_1();
   MFRC522_Init();
-  SetAllRed();
-  SetTrafficState(SOUTH_GREEN);
 
   /* USER CODE END 2 */
 
@@ -200,13 +150,13 @@ int main(void)
 	  	  	    status = MFRC522_Anticoll_1(str);
 	  	  	  memcpy(sNum, str, 5);
 	  	  	  set_status();
-	  	  	   HAL_Delay(100);
+	  	  	   // HAL_Delay(100);
 
 	  status = MFRC522_Request(PICC_REQIDL, str);
 	 	  		  status = MFRC522_Anticoll(str);
 	 	  		memcpy(sNum, str, 5);
 	 	  		set_status();
-	 	  	   HAL_Delay(100);
+	 	  		  	  //  HAL_Delay(100);
 	 	  		if(chainless){
 	 	  		 HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13,1);
 	 	  		}
@@ -363,7 +313,7 @@ static void MX_TIM2_Init(void)
   htim2.Instance = TIM2;
   htim2.Init.Prescaler = 8399;
   htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim2.Init.Period = 9999;
+  htim2.Init.Period = 10000;
   htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim2) != HAL_OK)
@@ -405,18 +355,16 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13|GPIO_PIN_14|GPIO_PIN_15, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOA, rfid2_sda_Pin|rfid1_cs_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, rfid1_reset_Pin|rfid2_reset_Pin|GPIO_PIN_13|GPIO_PIN_3
-                          |GPIO_PIN_4|GPIO_PIN_5|GPIO_PIN_6|GPIO_PIN_7
-                          |GPIO_PIN_8|GPIO_PIN_9, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOB, rfid1_reset_Pin|rfid2_reset_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pin : PC13 */
-  GPIO_InitStruct.Pin = GPIO_PIN_13;
+  /*Configure GPIO pins : PC13 PC14 PC15 */
+  GPIO_InitStruct.Pin = GPIO_PIN_13|GPIO_PIN_14|GPIO_PIN_15;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
@@ -429,12 +377,8 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : rfid1_reset_Pin rfid2_reset_Pin PB13 PB3
-                           PB4 PB5 PB6 PB7
-                           PB8 PB9 */
-  GPIO_InitStruct.Pin = rfid1_reset_Pin|rfid2_reset_Pin|GPIO_PIN_13|GPIO_PIN_3
-                          |GPIO_PIN_4|GPIO_PIN_5|GPIO_PIN_6|GPIO_PIN_7
-                          |GPIO_PIN_8|GPIO_PIN_9;
+  /*Configure GPIO pins : rfid1_reset_Pin rfid2_reset_Pin */
+  GPIO_InitStruct.Pin = rfid1_reset_Pin|rfid2_reset_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
@@ -451,43 +395,35 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
-{
-    if (htim->Instance == TIM2)
-    {
-        trafficTimer++;  // counts seconds in current state
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
+    if (htim->Instance == TIM2) {   // Assuming TIM2 is your 1s timer
+        timerCounter++;
 
-        switch (trafficState)
-        {
-            case SOUTH_GREEN:
-                if (trafficTimer >= 10) {
-                    trafficTimer = 0;
-                    trafficState = WEST_GREEN;
-                    SetTrafficState(WEST_GREEN);
+        switch (currentState) {
+            case STATE_GREEN:
+                if (timerCounter >= 10) {
+                    currentState = STATE_RED;
+                    timerCounter = 0;
+                    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_1, GPIO_PIN_RESET); // Green OFF
+                    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_2, GPIO_PIN_SET);   // Red ON
                 }
                 break;
 
-            case WEST_GREEN:
-                if (trafficTimer >= 10) {
-                    trafficTimer = 0;
-                    trafficState = NORTH_GREEN;
-                    SetTrafficState(NORTH_GREEN);
+            case STATE_RED:
+                if (timerCounter >= 30) {
+                    currentState = STATE_GREEN;
+                    timerCounter = 0;
+                    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_2, GPIO_PIN_RESET); // Red OFF
+                    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_1, GPIO_PIN_SET);   // Green ON
                 }
                 break;
 
-            case NORTH_GREEN:
-                if (trafficTimer >= 10) {
-                    trafficTimer = 0;
-                    trafficState = EAST_GREEN;
-                    SetTrafficState(EAST_GREEN);
-                }
-                break;
-
-            case EAST_GREEN:
-                if (trafficTimer >= 10) {
-                    trafficTimer = 0;
-                    trafficState = SOUTH_GREEN;
-                    SetTrafficState(SOUTH_GREEN);
+            case STATE_RFID_GREEN:
+                if (timerCounter >= 10) {
+                    currentState = STATE_RED;  // After RFID override, go to red cycle
+                    timerCounter = 0;
+                    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_1, GPIO_PIN_RESET); // Green OFF
+                    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_2, GPIO_PIN_SET);   // Red ON
                 }
                 break;
         }

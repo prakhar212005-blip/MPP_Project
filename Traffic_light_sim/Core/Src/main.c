@@ -1,4 +1,7 @@
 /* USER CODE BEGIN Header */
+//Reader 1 is South road
+//Reader 2 is West Road.
+
 /**
   ******************************************************************************
   * @file           : main.c
@@ -21,7 +24,11 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "stdio.h"
+#include "string.h"
+#include <rc522_1.h>
+#include <rc522_2.h>
+#include <stdbool.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -45,8 +52,29 @@ SPI_HandleTypeDef hspi2;
 
 TIM_HandleTypeDef htim2;
 
+UART_HandleTypeDef huart1;
+
 /* USER CODE BEGIN PV */
-// Traffic light LED pins (adjust as per your board wiring)
+
+typedef enum {
+    CARD_NONE,
+    CARD_AMBULANCE,
+    CARD_POLICE,
+    CARD_UNKNOWN
+} CardType;
+
+
+// Keep track of last detected card
+CardType lastCard = CARD_NONE;
+
+uint8_t status;
+uint8_t str[MAX_LEN]; // Max_LEN = 16
+uint8_t card_id[5];
+uint8_t cardNumber = 2;
+bool chainless = false;
+bool chained = false;
+bool emergencychange = false;
+
 #define SOUTH_GREEN_PIN   GPIO_PIN_3
 #define SOUTH_RED_PIN     GPIO_PIN_4
 #define WEST_GREEN_PIN    GPIO_PIN_5
@@ -55,7 +83,7 @@ TIM_HandleTypeDef htim2;
 #define NORTH_RED_PIN     GPIO_PIN_8
 #define EAST_GREEN_PIN    GPIO_PIN_9
 #define EAST_RED_PIN      GPIO_PIN_13
-#define TRAFFIC_PORT      GPIOB   // change if you use another GPIO port
+#define TRAFFIC_PORT      GPIOB
 
 /* USER CODE END PV */
 
@@ -65,13 +93,20 @@ static void MX_GPIO_Init(void);
 static void MX_SPI1_Init(void);
 static void MX_TIM2_Init(void);
 static void MX_SPI2_Init(void);
+static void MX_USART1_UART_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+
 uint16_t timerCounter = 0;
+
+typedef enum{
+	reader1,
+	reader2
+}Reader;
 
 typedef enum {
     SOUTH_GREEN,
@@ -80,6 +115,11 @@ typedef enum {
     EAST_GREEN
 } TrafficState;
 
+
+bool emergencySouth = false;
+bool emergencyWest = false;
+bool emergencyActive = false;  // Indicates currently giving priority
+TrafficState prevState;
 TrafficState trafficState = SOUTH_GREEN;
 uint16_t trafficTimer = 0;  // counts seconds within one state
 
@@ -119,6 +159,61 @@ void SetTrafficState(TrafficState state) {
 }
 
 
+void set_status(Reader readby){
+		prevState = trafficState;
+	if(readby == reader1){
+		trafficTimer = 0;
+		emergencychange = true;
+		SetTrafficState(SOUTH_GREEN);
+	}
+	else if(readby == reader2){
+		trafficTimer = 0;
+		emergencychange = true;
+		SetTrafficState(WEST_GREEN);
+	}
+}
+
+void ProcessRFIDCard(uint8_t *card_id, const char *roadName)
+{
+	extern CardType lastCard;
+	CardType currentCard = CARD_UNKNOWN;
+    char msg[120];
+
+    // Identify card
+    if (card_id[2] == 174 && card_id[4] == 39)
+        currentCard = CARD_AMBULANCE;
+    else if (card_id[2] == 175 && card_id[4] == 118)
+        currentCard = CARD_POLICE;
+    else
+        currentCard = CARD_UNKNOWN;
+
+    // Only transmit if it's a new card or different from the last
+    if (currentCard != CARD_UNKNOWN && currentCard != lastCard)
+    {
+        switch (currentCard)
+        {
+            case CARD_AMBULANCE:
+                sprintf(msg,
+                        "\r\n Ambulance detected at %s road!\r\nVehicle Number: KA20 G 9999\r\n",
+                        roadName);
+                break;
+
+            case CARD_POLICE:
+                sprintf(msg,
+                        "\r\n Police vehicle detected at %s road!\r\nVehicle Number: KA20 G 1234\r\n",
+                        roadName);
+                break;
+
+            default:
+                return; // Unknown card, ignore
+        }
+
+        HAL_UART_Transmit(&huart1, (uint8_t *)msg, strlen(msg), HAL_MAX_DELAY);
+        lastCard = currentCard;  // update last card
+    }
+}
+
+
 /* USER CODE END 0 */
 
 /**
@@ -152,16 +247,52 @@ int main(void)
   MX_SPI1_Init();
   MX_TIM2_Init();
   MX_SPI2_Init();
+  MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
   HAL_TIM_Base_Start_IT(&htim2);
+  MFRC522_Init_1();
+  MFRC522_Init();
   SetAllRed();
   SetTrafficState(SOUTH_GREEN);
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13,0);
   while (1)
   {
+	  //PC13 LED TESTER
+//	  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, 1);
+//			  HAL_Delay(100);
+//	  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, 0);
+//			  HAL_Delay(100);
+
+//	  HAL_UART_Transmit(&huart1, data, sizeof(data), 1000);
+//	  HAL_Delay(1000);
+
+	  // South RFID
+	  if (!emergencyActive && MFRC522_Request_1(PICC_REQIDL_1, str) == MI_OK)
+	  {
+	      status = MFRC522_Anticoll_1(str);
+	      memcpy(card_id, str, 5);
+	      ProcessRFIDCard(card_id,"South");
+	      emergencySouth = true;   // Emergency detected on South
+
+	      HAL_Delay(50);
+	  }
+
+	  // West RFID
+	  if (!emergencyActive && MFRC522_Request(PICC_REQIDL, str) == MI_OK)
+	  {
+	      status = MFRC522_Anticoll(str);
+	      memcpy(card_id, str, 5);
+	      ProcessRFIDCard(card_id,"West");
+	      emergencyWest = true;    // Emergency detected on West
+	      HAL_Delay(50);
+	  }
+
+
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -336,6 +467,39 @@ static void MX_TIM2_Init(void)
 }
 
 /**
+  * @brief USART1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_USART1_UART_Init(void)
+{
+
+  /* USER CODE BEGIN USART1_Init 0 */
+
+  /* USER CODE END USART1_Init 0 */
+
+  /* USER CODE BEGIN USART1_Init 1 */
+
+  /* USER CODE END USART1_Init 1 */
+  huart1.Instance = USART1;
+  huart1.Init.BaudRate = 115200;
+  huart1.Init.WordLength = UART_WORDLENGTH_8B;
+  huart1.Init.StopBits = UART_STOPBITS_1;
+  huart1.Init.Parity = UART_PARITY_NONE;
+  huart1.Init.Mode = UART_MODE_TX_RX;
+  huart1.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  huart1.Init.OverSampling = UART_OVERSAMPLING_16;
+  if (HAL_UART_Init(&huart1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN USART1_Init 2 */
+
+  /* USER CODE END USART1_Init 2 */
+
+}
+
+/**
   * @brief GPIO Initialization Function
   * @param None
   * @retval None
@@ -401,46 +565,96 @@ static void MX_GPIO_Init(void)
 /* USER CODE BEGIN 4 */
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
-    if (htim->Instance == TIM2)
-    {
-        trafficTimer++;  // counts seconds in current state
+    if (htim->Instance != TIM2) return;
 
-        switch (trafficState)
-        {
-            case SOUTH_GREEN:
-                if (trafficTimer >= 10) {
-                    trafficTimer = 0;
-                    trafficState = WEST_GREEN;
-                    SetTrafficState(WEST_GREEN);
-                }
-                break;
+    trafficTimer++;  // seconds
 
-            case WEST_GREEN:
-                if (trafficTimer >= 10) {
-                    trafficTimer = 0;
-                    trafficState = NORTH_GREEN;
-                    SetTrafficState(NORTH_GREEN);
-                }
-                break;
+    if (emergencyActive) {
+        if (trafficTimer >= 10) {
+            trafficTimer = 0;
+            emergencyActive = false;
 
-            case NORTH_GREEN:
-                if (trafficTimer >= 10) {
-                    trafficTimer = 0;
-                    trafficState = EAST_GREEN;
-                    SetTrafficState(EAST_GREEN);
-                }
-                break;
+            // ✅ Reset last detected card after emergency ends
+            extern CardType lastCard;
+            lastCard = CARD_NONE;
 
-            case EAST_GREEN:
-                if (trafficTimer >= 10) {
-                    trafficTimer = 0;
-                    trafficState = SOUTH_GREEN;
-                    SetTrafficState(SOUTH_GREEN);
+            // Only go back to previous state if it's different
+            if (trafficState != prevState) {
+                trafficState = prevState; // resume normal
+            } else {
+                // advance to the next normal state
+                switch (trafficState) {
+                    case SOUTH_GREEN: trafficState = WEST_GREEN; break;
+                    case WEST_GREEN: trafficState = NORTH_GREEN; break;
+                    case NORTH_GREEN: trafficState = EAST_GREEN; break;
+                    case EAST_GREEN: trafficState = SOUTH_GREEN; break;
                 }
-                break;
+            }
+
+            SetTrafficState(trafficState);
         }
+        return;
+    }
+
+
+    // Check for new emergency
+    if (emergencySouth) {
+        prevState = trafficState;
+        trafficState = SOUTH_GREEN;
+        emergencySouth = false;
+        emergencyActive = true;
+        trafficTimer = 0;
+        SetTrafficState(trafficState);
+        return;
+    }
+    if (emergencyWest) {
+        prevState = trafficState;
+        trafficState = WEST_GREEN;
+        emergencyWest = false;
+        emergencyActive = true;
+        trafficTimer = 0;
+        SetTrafficState(trafficState);
+        return;
+    }
+
+    // Normal state machine
+    switch (trafficState)
+    {
+        case SOUTH_GREEN:
+            if (trafficTimer >= 10) {
+                trafficTimer = 0;
+                prevState = trafficState;
+                trafficState = WEST_GREEN;
+                SetTrafficState(trafficState);
+            }
+            break;
+        case WEST_GREEN:
+            if (trafficTimer >= 10) {
+                trafficTimer = 0;
+                prevState = trafficState;
+                trafficState = NORTH_GREEN;
+                SetTrafficState(trafficState);
+            }
+            break;
+        case NORTH_GREEN:
+            if (trafficTimer >= 10) {
+                trafficTimer = 0;
+                prevState = trafficState;
+                trafficState = EAST_GREEN;
+                SetTrafficState(trafficState);
+            }
+            break;
+        case EAST_GREEN:
+            if (trafficTimer >= 10) {
+                trafficTimer = 0;
+                prevState = trafficState;
+                trafficState = SOUTH_GREEN;
+                SetTrafficState(trafficState);
+            }
+            break;
     }
 }
+
 
 /* USER CODE END 4 */
 

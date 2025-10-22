@@ -54,7 +54,7 @@ TIM_HandleTypeDef htim2;
 /* USER CODE BEGIN PV */
 uint8_t status;
 uint8_t str[MAX_LEN]; // Max_LEN = 16
-uint8_t sNum[5];
+uint8_t card_id[5];
 uint8_t cardNumber = 2;
 bool chainless = false;
 bool chained = false;
@@ -210,11 +210,10 @@ int main(void)
 //			  HAL_Delay(100);
 
 	  // South RFID
-	  // South RFID
 	  if (!emergencyActive && MFRC522_Request_1(PICC_REQIDL_1, str) == MI_OK)
 	  {
 	      status = MFRC522_Anticoll_1(str);
-	      memcpy(sNum, str, 5);
+	      memcpy(card_id, str, 5);
 	      emergencySouth = true;   // Emergency detected on South
 	      HAL_Delay(100);
 	  }
@@ -223,7 +222,7 @@ int main(void)
 	  if (!emergencyActive && MFRC522_Request(PICC_REQIDL, str) == MI_OK)
 	  {
 	      status = MFRC522_Anticoll(str);
-	      memcpy(sNum, str, 5);
+	      memcpy(card_id, str, 5);
 	      emergencyWest = true;    // Emergency detected on West
 	      HAL_Delay(100);
 	  }

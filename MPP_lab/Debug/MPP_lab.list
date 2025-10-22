@@ -549,10 +549,10 @@ int main(void)
  8000602:	f44f 5100 	mov.w	r1, #8192	; 0x2000
  8000606:	4825      	ldr	r0, [pc, #148]	; (800069c <main+0xd0>)
  8000608:	f001 fb96 	bl	8001d38 <HAL_GPIO_WritePin>
+//			  HAL_Delay(100);
 //	  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, 0);
 //			  HAL_Delay(100);
 
-	  // South RFID
 	  // South RFID
 	  if (!emergencyActive && MFRC522_Request_1(PICC_REQIDL_1, str) == MI_OK)
  800060c:	4b24      	ldr	r3, [pc, #144]	; (80006a0 <main+0xd4>)

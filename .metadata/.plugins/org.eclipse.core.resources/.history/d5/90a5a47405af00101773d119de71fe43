@@ -175,6 +175,45 @@ void set_status(Reader readby){
 	}
 }
 
+//void ProcessRFIDCard(uint8_t *card_id, const char *roadName)
+//{
+//	extern CardType lastCard;
+//	CardType currentCard = CARD_UNKNOWN;
+//    char msg[120];
+//
+//    // Identify card
+//    if (card_id[2] == 174 && card_id[4] == 39)
+//        currentCard = CARD_AMBULANCE;
+//    else if (card_id[2] == 175 && card_id[4] == 118)
+//        currentCard = CARD_POLICE;
+//    else
+//        currentCard = CARD_UNKNOWN;
+//
+//    // Only transmit if it's a new card or different from the last
+//    if (currentCard != CARD_UNKNOWN && currentCard != lastCard)
+//    {
+//        switch (currentCard)
+//        {
+//            case CARD_AMBULANCE:
+//                sprintf(msg,
+//                        "\r\n Ambulance detected at %s road!\r\nVehicle Number: KA20 G 9999\r\n",
+//                        roadName);
+//                break;
+//
+//            case CARD_POLICE:
+//                sprintf(msg,
+//                        "\r\n Police vehicle detected at %s road!\r\nVehicle Number: KA20 G 1234\r\n",
+//                        roadName);
+//                break;
+//
+//            default:
+//                return; // Unknown card, ignore
+//        }
+//
+//        HAL_UART_Transmit(&huart1, (uint8_t *)msg, strlen(msg), HAL_MAX_DELAY);
+//        lastCard = currentCard;  // update last card
+//    }
+//}
 
 void ProcessRFIDCard(uint8_t *card_id, const char *roadName)
 {
@@ -277,6 +316,15 @@ int main(void)
   HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13,0);
   while (1)
   {
+	  //PC13 LED TESTER
+//	  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, 1);
+//			  HAL_Delay(100);
+//	  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, 0);
+//			  HAL_Delay(100);
+
+//	  HAL_UART_Transmit(&huart1, data, sizeof(data), 1000);
+//	  HAL_Delay(1000);
+
 	  // South RFID
 	  if (!emergencyActive && MFRC522_Request_1(PICC_REQIDL_1, str) == MI_OK)
 	  {
@@ -297,6 +345,8 @@ int main(void)
 	      emergencyWest = true;    // Emergency detected on West
 	      HAL_Delay(50);
 	  }
+
+
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */

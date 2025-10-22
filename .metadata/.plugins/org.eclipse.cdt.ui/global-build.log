@@ -1,4 +1,4 @@
-09:57:59 **** Incremental Build of configuration Debug for project Traffic_light_sim ****
+10:40:41 **** Incremental Build of configuration Debug for project Traffic_light_sim ****
 make -j16 all 
 arm-none-eabi-gcc "../Core/Src/main.c" -mcpu=cortex-m4 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32F401xC -c -I../Core/Inc -I../Drivers/STM32F4xx_HAL_Driver/Inc -I../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I../Drivers/CMSIS/Include -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/main.d" -MT"Core/Src/main.o" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -o "Core/Src/main.o"
 arm-none-eabi-gcc -o "Traffic_light_sim.elf" @"objects.list"   -mcpu=cortex-m4 -T"C:\Users\sudee\OneDrive\Desktop\MPP project\Traffic_light_sim\STM32F401CCUX_FLASH.ld" --specs=nosys.specs -Wl,-Map="Traffic_light_sim.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
@@ -7,36 +7,8 @@ Finished building target: Traffic_light_sim.elf
 arm-none-eabi-size  Traffic_light_sim.elf 
 arm-none-eabi-objdump -h -S Traffic_light_sim.elf  > "Traffic_light_sim.list"
    text	   data	    bss	    dec	    hex	filename
-  18936	    100	   2252	  21288	   5328	Traffic_light_sim.elf
+  19276	    100	   2252	  21628	   547c	Traffic_light_sim.elf
 Finished building: default.size.stdout
  
 Finished building: Traffic_light_sim.list
- 
-09:58:05 **** Incremental Build of configuration Debug for project Traffic_light_sim ****
-make -j16 all 
-arm-none-eabi-size  Traffic_light_sim.elf 
-   text	   data	    bss	    dec	    hex	filename
-  18936	    100	   2252	  21288	   5328	Traffic_light_sim.elf
-Finished building: default.size.stdout
- 
-09:58:25 **** Incremental Build of configuration Debug for project Traffic_light_sim ****
-make -j16 all 
-arm-none-eabi-size  Traffic_light_sim.elf 
-   text	   data	    bss	    dec	    hex	filename
-  18936	    100	   2252	  21288	   5328	Traffic_light_sim.elf
-Finished building: default.size.stdout
- 
-09:58:39 **** Incremental Build of configuration Debug for project Traffic_light_sim ****
-make -j16 all 
-arm-none-eabi-size  Traffic_light_sim.elf 
-   text	   data	    bss	    dec	    hex	filename
-  18936	    100	   2252	  21288	   5328	Traffic_light_sim.elf
-Finished building: default.size.stdout
- 
-09:59:09 **** Incremental Build of configuration Debug for project Traffic_light_sim ****
-make -j16 all 
-arm-none-eabi-size  Traffic_light_sim.elf 
-   text	   data	    bss	    dec	    hex	filename
-  18936	    100	   2252	  21288	   5328	Traffic_light_sim.elf
-Finished building: default.size.stdout
  

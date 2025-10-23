@@ -69,8 +69,8 @@ typedef enum {
 // Keep track of last detected card
 CardType lastCard = CARD_NONE;
 #define MAX_HISTORY 20
-char vehicleHistory[MAX_HISTORY][10];
-int historyIndex = 0;                 // next empty index in history
+char vehicleHistory[MAX_HISTORY][20];  // store up to 20 vehicle numbers
+int historyIndex = 0;                  // next empty index in history
 
 
 uint8_t status;
@@ -268,8 +268,8 @@ void ProcessRFIDCard(uint8_t *card_id, const char *roadName)
         strcpy(vehicleNumber, "KA20 M3578");
     }
     else if (id2 == 32 && id3 == 3 && id4 == 177) { // 🚒 Firetruck 2
-        currentCard = CARD_AMBULANCE;
-        strcpy(vehicleType, "Ambulance");
+        currentCard = CARD_FIRETRUCK;
+        strcpy(vehicleType, "Firetruck");
         strcpy(vehicleNumber, "KA20 P9876");
     }
 
@@ -283,14 +283,27 @@ void ProcessRFIDCard(uint8_t *card_id, const char *roadName)
         HAL_UART_Transmit(&huart1, (uint8_t *)msg, strlen(msg), HAL_MAX_DELAY);
         lastCard = currentCard;
 
-        // --- Store in vehicle history continuously ---
-        strcpy(vehicleHistory[historyIndex], vehicleNumber);
-        historyIndex++;
-
-        if (historyIndex >= MAX_HISTORY)
-            historyIndex = 0; // circular overwrite when full
+        // --- Store in vehicle history ---
+        if (historyIndex < MAX_HISTORY - 1)
+        {
+            strcpy(vehicleHistory[historyIndex], vehicleNumber);
+            historyIndex++;
+            // Add a blank separator entry for readability
+            strcpy(vehicleHistory[historyIndex], "");
+            historyIndex++;
+        }
+        else
+        {
+            // If history is full, overwrite oldest (circular buffer)
+            historyIndex = 0;
+            strcpy(vehicleHistory[historyIndex], vehicleNumber);
+            historyIndex++;
+            strcpy(vehicleHistory[historyIndex], "");
+            historyIndex++;
+        }
     }
 }
+
 
 
 /* USER CODE END 0 */

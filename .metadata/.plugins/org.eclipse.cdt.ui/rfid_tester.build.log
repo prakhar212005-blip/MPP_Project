@@ -1,10 +1,10 @@
-18:03:24 **** Incremental Build of configuration Debug for project rfid_tester ****
+12:43:34 **** Incremental Build of configuration Debug for project rfid_tester ****
 make -j16 all 
 arm-none-eabi-size  rfid_tester.elf 
    text	   data	    bss	    dec	    hex	filename
-   8808	     20	   1684	  10512	   2910	rfid_tester.elf
+   8036	     20	   1660	   9716	   25f4	rfid_tester.elf
 Finished building: default.size.stdout
  
 
-18:03:25 Build Finished. 0 errors, 0 warnings. (took 250ms)
+12:43:35 Build Finished. 0 errors, 0 warnings. (took 242ms)
 

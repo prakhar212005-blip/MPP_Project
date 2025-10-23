@@ -99,11 +99,10 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_12, 1);
-//	  status = MFRC522_Request_1(PICC_REQIDL_1, str);
-//	    status = MFRC522_Anticoll_1(str);
-//	    memcpy(sNum, str, 5);
-//	    HAL_Delay(100);
+	  status = MFRC522_Request_1(PICC_REQIDL_1, str);
+	    status = MFRC522_Anticoll_1(str);
+	    memcpy(sNum, str, 5);
+	    HAL_Delay(100);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */

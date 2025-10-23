@@ -68,10 +68,6 @@ typedef enum {
 
 // Keep track of last detected card
 CardType lastCard = CARD_NONE;
-#define MAX_HISTORY 20
-char vehicleHistory[MAX_HISTORY][10];
-int historyIndex = 0;                 // next empty index in history
-
 
 uint8_t status;
 uint8_t str[MAX_LEN]; // Max_LEN = 16
@@ -180,59 +176,6 @@ void set_status(Reader readby){
 }
 
 
-//void ProcessRFIDCard(uint8_t *card_id, const char *roadName)
-//{
-//    extern CardType lastCard;
-//    CardType currentCard = CARD_UNKNOWN;
-//    char msg[150];
-//    char vehicleType[20] = "";
-//    char vehicleNumber[20] = "";
-//
-//    // Check only index 2, 3, and 4 of card_id
-//    uint8_t id2 = card_id[2];
-//    uint8_t id3 = card_id[3];
-//    uint8_t id4 = card_id[4];
-//
-//    // --- Identify vehicle based on these 3 indices ---
-//    if (id2 == 174 && id3 == 2 && id4 == 39) { // 🚑 Ambulance
-//        currentCard = CARD_AMBULANCE;
-//        strcpy(vehicleType, "Ambulance");
-//        strcpy(vehicleNumber, "KA20 G9999");
-//    }
-//    else if (id2 == 175 && id3 == 2 && id4 == 118) { // 🚓 Police
-//        currentCard = CARD_POLICE;
-//        strcpy(vehicleType, "Police Vehicle");
-//        strcpy(vehicleNumber, "KA20 G1234");
-//    }
-//    else if (id2 == 182 && id3 == 94 && id4 == 163) { // 🚒 Firetruck
-//        currentCard = CARD_FIRETRUCK;
-//        strcpy(vehicleType, "Firetruck");
-//        strcpy(vehicleNumber, "KA20 T7654");
-//    }
-//    else if (id2 == 221 && id3 == 0 && id4 == 159) { // 🚓 Police 2
-//        currentCard = CARD_POLICE;
-//        strcpy(vehicleType, "Police Vehicle");
-//        strcpy(vehicleNumber, "KA20 M3578");
-//    }
-//    else if (id2 == 32 && id3 == 3 && id4 == 177) { // 🚒 Firetruck 2
-//        currentCard = CARD_AMBULANCE;
-//        strcpy(vehicleType, "Ambulance");
-//        strcpy(vehicleNumber, "KA20 P9876");
-//    }
-//
-//    // --- Send UART message only if a new card is detected ---
-//    if (currentCard != CARD_UNKNOWN && currentCard != lastCard)
-//    {
-//        sprintf(msg,
-//                "\r\n%s detected at %s road!\r\nVehicle Number: %s\r\n",
-//                vehicleType, roadName, vehicleNumber);
-//
-//        HAL_UART_Transmit(&huart1, (uint8_t *)msg, strlen(msg), HAL_MAX_DELAY);
-//        lastCard = currentCard;
-//    }
-//}
-
-
 void ProcessRFIDCard(uint8_t *card_id, const char *roadName)
 {
     extern CardType lastCard;
@@ -246,7 +189,7 @@ void ProcessRFIDCard(uint8_t *card_id, const char *roadName)
     uint8_t id3 = card_id[3];
     uint8_t id4 = card_id[4];
 
-    // --- Identify vehicle based on indices ---
+    // --- Identify vehicle based on these 3 indices ---
     if (id2 == 174 && id3 == 2 && id4 == 39) { // 🚑 Ambulance
         currentCard = CARD_AMBULANCE;
         strcpy(vehicleType, "Ambulance");
@@ -282,13 +225,6 @@ void ProcessRFIDCard(uint8_t *card_id, const char *roadName)
 
         HAL_UART_Transmit(&huart1, (uint8_t *)msg, strlen(msg), HAL_MAX_DELAY);
         lastCard = currentCard;
-
-        // --- Store in vehicle history continuously ---
-        strcpy(vehicleHistory[historyIndex], vehicleNumber);
-        historyIndex++;
-
-        if (historyIndex >= MAX_HISTORY)
-            historyIndex = 0; // circular overwrite when full
     }
 }
 

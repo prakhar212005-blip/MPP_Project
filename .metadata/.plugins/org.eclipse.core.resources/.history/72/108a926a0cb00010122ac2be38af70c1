@@ -268,8 +268,8 @@ void ProcessRFIDCard(uint8_t *card_id, const char *roadName)
         strcpy(vehicleNumber, "KA20 M3578");
     }
     else if (id2 == 32 && id3 == 3 && id4 == 177) { // 🚒 Firetruck 2
-        currentCard = CARD_AMBULANCE;
-        strcpy(vehicleType, "Ambulance");
+        currentCard = CARD_FIRETRUCK;
+        strcpy(vehicleType, "Firetruck");
         strcpy(vehicleNumber, "KA20 P9876");
     }
 
